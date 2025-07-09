@@ -2,12 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Tom Select Example</title>
+  <title>Tom Select Max Limit</title>
   <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
   <style>
     body {
       font-family: sans-serif;
       padding: 2rem;
+    }
+    .tom-select .ts-control[disabled] {
+      background-color: #f9f9f9;
+      color: #aaa;
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -24,10 +29,26 @@
 
   <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
   <script>
-    new TomSelect("#tags", {
+    const MAX_ITEMS = 3;
+
+    const select = new TomSelect("#tags", {
       create: true,
-      maxItems: 10,
+      maxItems: MAX_ITEMS,
       plugins: ['remove_button'],
+      onChange: function(value) {
+        const input = this.control_input;
+        const control = this.control;
+
+        if (this.items.length >= MAX_ITEMS) {
+          input.placeholder = ''; // hide placeholder
+          input.disabled = true;  // prevent typing
+          control.classList.add('disabled');
+        } else {
+          input.placeholder = 'Type and select...';
+          input.disabled = false;
+          control.classList.remove('disabled');
+        }
+      }
     });
   </script>
 
