@@ -65,10 +65,10 @@
             outline: none;
         }
         input.required-field {
-            border-left: 4px solid #e74c3c; /* Red highlight for required fields */
+            border-left: 4px solid #e74c3c;
         }
-        button {
-            background-color: #2ecc71;
+        .generate-btn {
+            background-color: #3498db; /* Blue for Generate */
             color: white;
             padding: 12px 20px;
             border: none;
@@ -79,7 +79,23 @@
             width: 100%;
             margin-top: 10px;
         }
-        button:hover {
+        .generate-btn:hover {
+            background-color: #2980b9;
+        }
+        .download-btn {
+            background-color: #2ecc71; /* Green for Download */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+            width: 80%; /* Smaller than generate button */
+            margin-top: 15px;
+            display: none; /* Hide until QR code is generated */
+        }
+        .download-btn:hover {
             background-color: #27ae60;
         }
         #qrcode {
@@ -138,23 +154,26 @@
             <label for="tiktok">TikTok Handle</label>
             <input type="text" id="tiktok" placeholder="@handle">
 
-            <button onclick="generateAndDownload()">Generate & Download QR Code (PNG)</button>
+            <button onclick="generateQRCode()" class="generate-btn">Generate QR Code</button>
         </div>
 
         <div class="qr-section">
-            <h2>Your QR Code</h2>
+            <h2>Your QR Code Preview</h2>
             <div id="qrcode"></div>
-            <p class="instruction">Scan the code to instantly save the contact card.</p>
+            
+            <button id="downloadButton" onclick="triggerDownload()" class="download-btn">Download QR Code (PNG)</button>
+            <p class="instruction">Scan the code above to test it, then click 'Download' to save the file.</p>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script>
-        // --- Initialization ---
+        // --- Global Variables ---
         const qrCodeDiv = document.getElementById("qrcode");
         const errorMessageDiv = document.getElementById("errorMessage");
-        let qr = null; // Will be initialized when first code is generated
+        const downloadButton = document.getElementById("downloadButton");
+        let qr = null; // Holds the QRCode object
 
         // Function to safely get a trimmed value, or an empty string
         const getValue = (id) => document.getElementById(id).value.trim();
@@ -180,59 +199,45 @@
             }
             errorMessageDiv.style.display = 'none';
 
-            // 2. Build the vCard String (v3.0 is widely supported)
+            // 2. Build the vCard String (v3.0)
             let vCard = `BEGIN:VCARD\nVERSION:3.0\n`;
             
-            // Name (FN: Formatted Name is required for vCard)
             vCard += `FN:${name}\n`;
-            vCard += `N:;${name};;;\n`; // Last Name;First Name;Middle Name;Prefix;Suffix
+            vCard += `N:;${name};;;\n`; 
 
-            // Organization
-            if (organization) {
-                vCard += `ORG:${organization}\n`;
-            }
+            if (organization) vCard += `ORG:${organization}\n`;
 
-            // Phone (TEL: type can be HOME, WORK, CELL)
             vCard += `TEL;TYPE=CELL:${phone}\n`;
 
-            // Email (EMAIL: type can be INTERNET, HOME, WORK)
             vCard += `EMAIL;TYPE=INTERNET:${email}\n`;
 
-            // Address (ADR: Post Office Box; Extended Address; Street; City; State; Zip; Country)
-            if (address) {
-                vCard += `ADR;TYPE=WORK:;;${address}\n`; 
-            }
+            if (address) vCard += `ADR;TYPE=WORK:;;${address}\n`; 
 
-            // Website (URL)
-            if (website) {
-                vCard += `URL:${website}\n`;
-            }
+            if (website) vCard += `URL:${website}\n`;
 
-            // Social Media links (using NOTE field as there's no official vCard field for them)
+            // Social Media in NOTE field
             const socialMedia = [];
             if (instagram) socialMedia.push(`Instagram: ${instagram}`);
             if (facebook) socialMedia.push(`Facebook: ${facebook}`);
             if (tiktok) socialMedia.push(`TikTok: ${tiktok}`);
 
             if (socialMedia.length > 0) {
-                // Escape newlines in the NOTE field
                 vCard += `NOTE:${socialMedia.join('\\n')}\n`;
             }
 
-            // End vCard
             vCard += `END:VCARD`;
 
             return vCard;
         }
 
         /**
-         * Generates the QR code and triggers its download.
+         * Generates and displays the QR code, then enables the download button.
          */
-        function generateAndDownload() {
+        function generateQRCode() {
             const vCardData = generateVCardData();
             if (!vCardData) return; // Exit if required fields are missing
 
-            // Initialize QRCode if it doesn't exist, or clear and redraw if it does
+            // Initialize QRCode object if it doesn't exist
             if (!qr) {
                 qr = new QRCode(qrCodeDiv, {
                     width: 256,
@@ -243,43 +248,61 @@
                 });
             }
             
-            // 1. Generate the QR Code
+            // Generate the QR Code
             qr.makeCode(vCardData);
+            
+            // Show the download button now that the code is visible
+            downloadButton.style.display = 'block'; 
+        }
 
-            // Wait a moment for the canvas to draw
+        /**
+         * Triggers the download of the currently displayed QR code image.
+         */
+        function triggerDownload() {
+            // Ensure the code has been generated
+            if (!qr) {
+                alert("Please generate the QR Code first.");
+                return;
+            }
+
+            // Wait a moment for the canvas to draw (essential for reliable download)
             setTimeout(() => {
-                // 2. Get the Canvas element created by qrcode.js
+                // 1. Get the Canvas element created by qrcode.js
+                // qrcode.js wraps the canvas in a div, so we access the first child
                 const canvas = qrCodeDiv.querySelector('canvas');
 
-                // 3. Convert the Canvas content to a Data URL (PNG image format)
+                if (!canvas) {
+                     alert("QR Code image not found.");
+                     return;
+                }
+
+                // 2. Convert the Canvas content to a Data URL (PNG image format)
                 const imageURL = canvas.toDataURL("image/png");
 
-                // 4. Create a temporary <a> element to trigger the download
+                // 3. Create a temporary <a> element to trigger the download
                 const downloadLink = document.createElement('a');
                 downloadLink.href = imageURL;
                 downloadLink.download = 'vcard_qr_code.png';
 
-                // 5. Simulate a click to download
+                // 4. Simulate a click to download
                 document.body.appendChild(downloadLink);
                 downloadLink.click();
                 document.body.removeChild(downloadLink);
 
-            }, 100); 
+                console.log("Download initiated.");
+
+            }, 50); 
         }
 
-        // Run the function once on page load to show a default, empty QR code
+        // Initial setup on page load
         document.addEventListener('DOMContentLoaded', () => {
-            // Set default required values for initial load
-            document.getElementById('name').value = "John Doe";
-            document.getElementById('email').value = "john.doe@example.com";
-            document.getElementById('phone').value = "+1-555-123-4567";
+            // Set default values for quick testing
+            document.getElementById('name').value = "Jane Doe";
+            document.getElementById('email').value = "jane.doe@work.com";
+            document.getElementById('phone').value = "+44 20 7946 0884";
             
-            // Generate the default code
-            generateAndDownload();
-            // Clear the input fields so the user sees empty fields, but the QR code remains
-            document.getElementById('name').value = "";
-            document.getElementById('email').value = "";
-            document.getElementById('phone').value = "";
+            // Generate the initial code on load
+            generateQRCode();
         });
     </script>
 
