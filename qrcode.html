@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional vCard QR Code Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+        }
+        .form-section, .qr-section {
+            padding: 30px;
+        }
+        .form-section {
+            flex: 2;
+            border-right: 1px solid #eee;
+        }
+        .qr-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background-color: #fafafa;
+            border-top-right-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        input.required-field {
+            border-left: 4px solid #e74c3c; /* Red highlight for required fields */
+        }
+        button {
+            background-color: #2ecc71;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #27ae60;
+        }
+        #qrcode {
+            margin-top: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        .instruction {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        .error-message {
+            color: #e74c3c;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="form-section">
+            <h1>Contact Card Details 👤</h1>
+            <p class="instruction">The fields **Name, Email, and Phone** are required to generate the vCard.</p>
+
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+            <label for="name">Name <span style="color:red;">*</span></label>
+            <input type="text" id="name" class="required-field" required>
+
+            <label for="email">Email <span style="color:red;">*</span></label>
+            <input type="text" id="email" class="required-field" required>
+
+            <label for="phone">Phone <span style="color:red;">*</span></label>
+            <input type="text" id="phone" class="required-field" required>
+
+            <label for="organization">Organization</label>
+            <input type="text" id="organization">
+
+            <label for="address">Address</label>
+            <input type="text" id="address" placeholder="Street;City;State;Zip;Country">
+
+            <label for="website">Website URL (e.g., https://yourdomain.com)</label>
+            <input type="text" id="website">
+            
+            <label for="instagram">Instagram Handle</label>
+            <input type="text" id="instagram" placeholder="@handle">
+            
+            <label for="facebook">Facebook Profile URL</label>
+            <input type="text" id="facebook">
+            
+            <label for="tiktok">TikTok Handle</label>
+            <input type="text" id="tiktok" placeholder="@handle">
+
+            <button onclick="generateAndDownload()">Generate & Download QR Code (PNG)</button>
+        </div>
+
+        <div class="qr-section">
+            <h2>Your QR Code</h2>
+            <div id="qrcode"></div>
+            <p class="instruction">Scan the code to instantly save the contact card.</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script>
+        // --- Initialization ---
+        const qrCodeDiv = document.getElementById("qrcode");
+        const errorMessageDiv = document.getElementById("errorMessage");
+        let qr = null; // Will be initialized when first code is generated
+
+        // Function to safely get a trimmed value, or an empty string
+        const getValue = (id) => document.getElementById(id).value.trim();
+
+        // --- Core vCard Generation Logic ---
+        function generateVCardData() {
+            // Get all field values
+            const name = getValue('name');
+            const email = getValue('email');
+            const phone = getValue('phone');
+            const organization = getValue('organization');
+            const address = getValue('address');
+            const website = getValue('website');
+            const instagram = getValue('instagram');
+            const facebook = getValue('facebook');
+            const tiktok = getValue('tiktok');
+
+            // 1. Minimum Required Check
+            if (!name || !email || !phone) {
+                errorMessageDiv.textContent = "Please fill in the Name, Email, and Phone fields.";
+                errorMessageDiv.style.display = 'block';
+                return null;
+            }
+            errorMessageDiv.style.display = 'none';
+
+            // 2. Build the vCard String (v3.0 is widely supported)
+            let vCard = `BEGIN:VCARD\nVERSION:3.0\n`;
+            
+            // Name (FN: Formatted Name is required for vCard)
+            vCard += `FN:${name}\n`;
+            vCard += `N:;${name};;;\n`; // Last Name;First Name;Middle Name;Prefix;Suffix
+
+            // Organization
+            if (organization) {
+                vCard += `ORG:${organization}\n`;
+            }
+
+            // Phone (TEL: type can be HOME, WORK, CELL)
+            vCard += `TEL;TYPE=CELL:${phone}\n`;
+
+            // Email (EMAIL: type can be INTERNET, HOME, WORK)
+            vCard += `EMAIL;TYPE=INTERNET:${email}\n`;
+
+            // Address (ADR: Post Office Box; Extended Address; Street; City; State; Zip; Country)
+            if (address) {
+                vCard += `ADR;TYPE=WORK:;;${address}\n`; 
+            }
+
+            // Website (URL)
+            if (website) {
+                vCard += `URL:${website}\n`;
+            }
+
+            // Social Media links (using NOTE field as there's no official vCard field for them)
+            const socialMedia = [];
+            if (instagram) socialMedia.push(`Instagram: ${instagram}`);
+            if (facebook) socialMedia.push(`Facebook: ${facebook}`);
+            if (tiktok) socialMedia.push(`TikTok: ${tiktok}`);
+
+            if (socialMedia.length > 0) {
+                // Escape newlines in the NOTE field
+                vCard += `NOTE:${socialMedia.join('\\n')}\n`;
+            }
+
+            // End vCard
+            vCard += `END:VCARD`;
+
+            return vCard;
+        }
+
+        /**
+         * Generates the QR code and triggers its download.
+         */
+        function generateAndDownload() {
+            const vCardData = generateVCardData();
+            if (!vCardData) return; // Exit if required fields are missing
+
+            // Initialize QRCode if it doesn't exist, or clear and redraw if it does
+            if (!qr) {
+                qr = new QRCode(qrCodeDiv, {
+                    width: 256,
+                    height: 256,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+            
+            // 1. Generate the QR Code
+            qr.makeCode(vCardData);
+
+            // Wait a moment for the canvas to draw
+            setTimeout(() => {
+                // 2. Get the Canvas element created by qrcode.js
+                const canvas = qrCodeDiv.querySelector('canvas');
+
+                // 3. Convert the Canvas content to a Data URL (PNG image format)
+                const imageURL = canvas.toDataURL("image/png");
+
+                // 4. Create a temporary <a> element to trigger the download
+                const downloadLink = document.createElement('a');
+                downloadLink.href = imageURL;
+                downloadLink.download = 'vcard_qr_code.png';
+
+                // 5. Simulate a click to download
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+
+            }, 100); 
+        }
+
+        // Run the function once on page load to show a default, empty QR code
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set default required values for initial load
+            document.getElementById('name').value = "John Doe";
+            document.getElementById('email').value = "john.doe@example.com";
+            document.getElementById('phone').value = "+1-555-123-4567";
+            
+            // Generate the default code
+            generateAndDownload();
+            // Clear the input fields so the user sees empty fields, but the QR code remains
+            document.getElementById('name').value = "";
+            document.getElementById('email').value = "";
+            document.getElementById('phone').value = "";
+        });
+    </script>
+
+</body>
+</html>
