@@ -98,10 +98,31 @@
   }
 
   /* gallery */
-  .gallery{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .gallery{ display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
   .gallery figure{ margin:0; border:1px solid var(--border); border-radius: var(--radius); overflow:hidden; background: var(--panel); }
+  .gallery figure img{ cursor: zoom-in; transition: opacity .15s ease; }
+  .gallery figure img:hover{ opacity: .85; }
   .gallery figcaption{ padding: 10px 14px; font-size: 13px; color: var(--text-dim); border-top:1px solid var(--border); }
-  @media (max-width: 800px){ .gallery{ grid-template-columns: 1fr; } }
+
+  /* lightbox */
+  .lightbox{
+    display:none; position:fixed; inset:0; z-index:100;
+    background: rgba(4,6,14,0.92); backdrop-filter: blur(2px);
+    align-items:center; justify-content:center; padding: 40px;
+  }
+  .lightbox.open{ display:flex; }
+  .lightbox img{
+    max-width: 90vw; max-height: 85vh; width:auto;
+    border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .lightbox-close{
+    position: fixed; top: 18px; right: 22px;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    font-size: 20px; line-height: 1; cursor: pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .lightbox-close:hover{ background: var(--border); }
 
   /* features */
   .features{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
@@ -212,26 +233,41 @@
 <section id="screenshots">
   <div class="wrap">
     <h2>See it in action</h2>
-    <p class="section-sub">A few looks at the dialog, the live drag-to-position preview, and a finished watermarked image.</p>
+    <p class="section-sub">A few looks at picking a source and reference, the style controls, the live drag-to-position preview, and a finished watermarked image. Click any screenshot to enlarge it.</p>
     <div class="gallery">
       <figure>
-        <!-- Drop images/dialog.png here and replace this placeholder with <img src="images/dialog.png" alt="Watermark style controls"> -->
+        <!-- Drop images/source.png here and replace this placeholder with: <img src="images/source.png" alt="Target image selection" onclick="openLightbox(this)"> -->
+        <div class="shot-placeholder"><div class="icon">🎯</div><code>images/source.png</code></div>
+        <figcaption>Target image — pick the view you want watermarked</figcaption>
+      </figure>
+      <figure>
+        <!-- Drop images/reference.png here and replace this placeholder with: <img src="images/reference.png" alt="Reference metadata source selection" onclick="openLightbox(this)"> -->
+        <div class="shot-placeholder"><div class="icon">📂</div><code>images/reference.png</code></div>
+        <figcaption>Reference metadata source — an open view, or a FITS/XISF file on disk</figcaption>
+      </figure>
+      <figure>
+        <!-- Drop images/dialog.png here and replace this placeholder with: <img src="images/dialog.png" alt="Watermark style controls" onclick="openLightbox(this)"> -->
         <div class="shot-placeholder"><div class="icon">🎛️</div><code>images/dialog.png</code></div>
         <figcaption>Watermark style controls — font size, color, background opacity, alignment</figcaption>
       </figure>
       <figure>
-        <!-- Drop images/preview.png here -->
+        <!-- Drop images/preview.png here and replace this placeholder with: <img src="images/preview.png" alt="Live drag-to-position preview" onclick="openLightbox(this)"> -->
         <div class="shot-placeholder"><div class="icon">🖱️</div><code>images/preview.png</code></div>
         <figcaption>Live preview — drag to reposition, or use the 3×3 quick-position grid</figcaption>
       </figure>
       <figure>
-        <!-- Drop images/result.png here -->
+        <!-- Drop images/result.png here and replace this placeholder with: <img src="images/result.png" alt="Finished watermarked image" onclick="openLightbox(this)"> -->
         <div class="shot-placeholder"><div class="icon">✨</div><code>images/result.png</code></div>
         <figcaption>Finished result — watermark baked into a new copy of the image</figcaption>
       </figure>
     </div>
   </div>
 </section>
+
+<div class="lightbox" id="lightbox" onclick="if(event.target===this) closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">✕</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
 
 <section id="features">
   <div class="wrap">
@@ -365,6 +401,24 @@ function copyText(id, btn){
     setTimeout(function(){ btn.textContent = original; btn.classList.remove("copied"); }, 1600);
   });
 }
+
+function openLightbox(imgEl){
+  var lb = document.getElementById("lightbox");
+  var lbImg = document.getElementById("lightbox-img");
+  lbImg.src = imgEl.src;
+  lbImg.alt = imgEl.alt;
+  lb.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeLightbox(){
+  var lb = document.getElementById("lightbox");
+  lb.classList.remove("open");
+  document.getElementById("lightbox-img").src = "";
+  document.body.style.overflow = "";
+}
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape") closeLightbox();
+});
 </script>
 
 </body>
