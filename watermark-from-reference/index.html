@@ -77,17 +77,8 @@
     border: 1px solid var(--border);
     box-shadow: 0 30px 80px -30px rgba(0,0,0,0.6);
   }
-  .hero-shot img{ width:100%; }
-
-  /* placeholders */
-  .shot-placeholder{
-    aspect-ratio: 16/10; width:100%;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
-    background: repeating-linear-gradient(135deg, var(--panel), var(--panel) 10px, #10152a 10px, #10152a 20px);
-    color: var(--text-dim); font-size: 13px; text-align:center; padding: 20px;
-  }
-  .shot-placeholder .icon{ font-size: 28px; opacity:.6; }
-  .shot-placeholder code{ background: rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px; font-size:12px; }
+  .hero-shot img{ width:100%; cursor: zoom-in; transition: opacity .15s ease; }
+  .hero-shot img:hover{ opacity: .9; }
 
   section{ padding: 64px 0; border-top: 1px solid var(--border); }
   section > .wrap > h2{
@@ -216,16 +207,7 @@
     </div>
 
     <div class="hero-shot">
-      <!--
-        SCREENSHOT SLOT: hero
-        Drop a screenshot of the dialog (or a finished watermarked image) at:
-        images/hero.png  — then replace the <div class="shot-placeholder"> block
-        below with: <img src="images/hero.png" alt="Watermark From Reference dialog in PixInsight">
-      -->
-      <div class="shot-placeholder">
-        <div class="icon">🖼️</div>
-        <div>Screenshot coming soon — drop <code>images/hero.png</code> in this folder</div>
-      </div>
+      <img src="images/hero.jpg" alt="Astrophoto of the NGC 6871 / WR-134 region with a Watermark From Reference text watermark showing telescope, camera, target, exposure, date, focal length, coordinates and site location" onclick="openLightbox(this)">
     </div>
   </div>
 </section>
@@ -236,28 +218,23 @@
     <p class="section-sub">A few looks at picking a source and reference, the style controls, the live drag-to-position preview, and a finished watermarked image. Click any screenshot to enlarge it.</p>
     <div class="gallery">
       <figure>
-        <!-- Drop images/source.png here and replace this placeholder with: <img src="images/source.png" alt="Target image selection" onclick="openLightbox(this)"> -->
-        <div class="shot-placeholder"><div class="icon">🎯</div><code>images/source.png</code></div>
-        <figcaption>Target image — pick the view you want watermarked</figcaption>
+        <img src="images/source.jpg" alt="Target astrophoto before watermarking" onclick="openLightbox(this)">
+        <figcaption>Target image — the astrophoto you're about to watermark, untouched</figcaption>
       </figure>
       <figure>
-        <!-- Drop images/reference.png here and replace this placeholder with: <img src="images/reference.png" alt="Reference metadata source selection" onclick="openLightbox(this)"> -->
-        <div class="shot-placeholder"><div class="icon">📂</div><code>images/reference.png</code></div>
-        <figcaption>Reference metadata source — an open view, or a FITS/XISF file on disk</figcaption>
+        <img src="images/reference.jpg" alt="Raw reference sub-frame supplying the FITS metadata" onclick="openLightbox(this)">
+        <figcaption>Reference metadata source — a raw sub-frame whose FITS header supplies the watermark text</figcaption>
       </figure>
       <figure>
-        <!-- Drop images/dialog.png here and replace this placeholder with: <img src="images/dialog.png" alt="Watermark style controls" onclick="openLightbox(this)"> -->
-        <div class="shot-placeholder"><div class="icon">🎛️</div><code>images/dialog.png</code></div>
-        <figcaption>Watermark style controls — font size, color, background opacity, alignment</figcaption>
+        <img src="images/dialog.png" alt="Watermark From Reference dialog showing target/reference pickers, watermark fields, and style controls" onclick="openLightbox(this)">
+        <figcaption>The dialog — pick fields, then set text size, color, background opacity and alignment</figcaption>
       </figure>
       <figure>
-        <!-- Drop images/preview.png here and replace this placeholder with: <img src="images/preview.png" alt="Live drag-to-position preview" onclick="openLightbox(this)"> -->
-        <div class="shot-placeholder"><div class="icon">🖱️</div><code>images/preview.png</code></div>
-        <figcaption>Live preview — drag to reposition, or use the 3×3 quick-position grid</figcaption>
+        <img src="images/preview.png" alt="Live preview showing the rendered watermark text and position preset grid" onclick="openLightbox(this)">
+        <figcaption>Live preview — see the exact metadata and watermark placement before committing</figcaption>
       </figure>
       <figure>
-        <!-- Drop images/result.png here and replace this placeholder with: <img src="images/result.png" alt="Finished watermarked image" onclick="openLightbox(this)"> -->
-        <div class="shot-placeholder"><div class="icon">✨</div><code>images/result.png</code></div>
+        <img src="images/hero.jpg" alt="Finished watermarked astrophoto" onclick="openLightbox(this)">
         <figcaption>Finished result — watermark baked into a new copy of the image</figcaption>
       </figure>
     </div>
